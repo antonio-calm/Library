@@ -530,6 +530,7 @@ public class Library extends Application {
             Stage saveConfirmationStage = new Stage();
             saveConfirmationStage.initOwner(primaryStage);
             saveConfirmationStage.initModality(Modality.WINDOW_MODAL);
+            saveConfirmationStage.initStyle(StageStyle.UTILITY);
             saveConfirmationStage.centerOnScreen();
             saveConfirmationStage.setMinHeight(100);
             saveConfirmationStage.setMaxHeight(100);
