@@ -2,10 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e280c318-6946-459b-800e-8eea4de9a34d" name="Default" comment="initial">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/artifacts/ClassWork0717_jar.xml" afterPath="$PROJECT_DIR$/.idea/artifacts/ClassWork0717_jar.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/profiles/AntonKalmykov.libr" afterPath="$PROJECT_DIR$/profiles/AntonKalmykov.libr" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/ClassWork0717.iml" afterPath="$PROJECT_DIR$/Library.iml" />
     </list>
     <ignored path="ClassWork0717.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -29,7 +27,7 @@
       <file leaf-file-name="Library.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Library/Library.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
+            <state relative-caret-position="-5661">
               <caret line="453" column="13" selection-start-line="453" selection-start-column="13" selection-end-line="453" selection-end-column="13" />
               <folding>
                 <element signature="imports" expanded="true" />
@@ -1276,7 +1274,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Library/Library.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
+        <state relative-caret-position="-5661">
           <caret line="453" column="13" selection-start-line="453" selection-start-column="13" selection-end-line="453" selection-end-column="13" />
           <folding>
             <element signature="imports" expanded="true" />
