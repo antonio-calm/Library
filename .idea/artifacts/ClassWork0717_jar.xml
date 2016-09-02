@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="ClassWork0717:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/ClassWork0717_jar</output-path>
-    <root id="archive" name="ClassWork0717.jar">
-      <element id="module-output" name="Library" />
-    </root>
-  </artifact>
-</component>

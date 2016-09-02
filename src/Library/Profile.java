@@ -32,6 +32,7 @@ public class Profile {
         books = FXCollections.observableArrayList();
         progressLog = FXCollections.observableArrayList();
         photo = new Image("no photo.png");
+        photoFileName = "";
     }
 
     public Image getPhoto() {

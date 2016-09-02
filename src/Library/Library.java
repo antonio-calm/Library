@@ -6,6 +6,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.*;
 import javafx.scene.Scene;
 import javafx.scene.chart.*;
@@ -34,7 +35,7 @@ public class Library extends Application {
 
     Profile profile = new Profile(new SimpleStringProperty(""), new SimpleStringProperty(""));
     final String PHOTO_DIR_NAME = ".library.photos";
-    final String SAVE_DIR_NAME = "profiles";
+    final String SAVE_DIR_NAME = ".library.profiles";
 
     @Override
     public void init() throws Exception {
@@ -339,110 +340,121 @@ public class Library extends Application {
         //Описываем поведение активных элементов
 
         //Кнопка добавления книги (вкладка My Library)
-        addBookButton.setOnAction((ActionEvent event) -> {
+        addBookButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
 
-            if (isDigit(addPages.getText()) && Integer.parseInt(addPages.getText().trim()) > 0 && !addTitle.getText().equals("") && !addAuthor.getText().equals("") && !addSubject.getText().equals("")) {
+                if (Library.this.isDigit(addPages.getText()) && Integer.parseInt(addPages.getText().trim()) > 0 && !addTitle.getText().equals("") && !addAuthor.getText().equals("") && !addSubject.getText().equals("")) {
 
-                if (!profile.getSubjects().contains(addSubject.getText().trim())) {
-                    pieChartDate.add(new PieChart.Data(addSubject.getText().trim(), 0));
+                    if (!profile.getSubjects().contains(addSubject.getText().trim())) {
+                        pieChartDate.add(new PieChart.Data(addSubject.getText().trim(), 0));
+                    }
+
+
+                    profile.books.add(
+                            new Book(
+                                    new SimpleStringProperty(addTitle.getText().trim()),
+                                    new SimpleStringProperty(addAuthor.getText().trim()),
+                                    new SimpleStringProperty(addSubject.getText().trim()),
+                                    new SimpleIntegerProperty(Integer.parseInt(addPages.getText().trim())),
+                                    new SimpleIntegerProperty(0)));
+
+                    addTitle.clear();
+                    addAuthor.clear();
+                    addSubject.clear();
+                    addPages.clear();
+                    bookQttyTextShow.setText(profile.books.size() + "");
                 }
-
-
-                profile.books.add(
-                        new Book(
-                                new SimpleStringProperty(addTitle.getText().trim()),
-                                new SimpleStringProperty(addAuthor.getText().trim()),
-                                new SimpleStringProperty(addSubject.getText().trim()),
-                                new SimpleIntegerProperty(Integer.parseInt(addPages.getText().trim())),
-                                new SimpleIntegerProperty(0)));
-
-                addTitle.clear();
-                addAuthor.clear();
-                addSubject.clear();
-                addPages.clear();
-                bookQttyTextShow.setText(profile.books.size() + "");
             }
         });
 
         //Кнопка удаления книги (вкладка My Library)
-        deleteBookButton.setOnAction((ActionEvent) -> {
-                    profile.books.remove(table.getSelectionModel().getSelectedItem());
-                    bookQttyTextShow.setText(profile.books.size() + "");
-                }
+        deleteBookButton.setOnAction(new EventHandler<ActionEvent>() {
+                                         @Override
+                                         public void handle(ActionEvent ActionEvent) {
+                                             profile.books.remove(table.getSelectionModel().getSelectedItem());
+                                             bookQttyTextShow.setText(profile.books.size() + "");
+                                         }
+                                     }
         );
 
         //Кнопка добавления прочитанных страниц (вкладка My Progress)
-        addReadPagesButton.setOnAction(event -> {
+        addReadPagesButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
 
-            //проверяем что все поля заполнены и введенная сумма страниц не превышает непрочитанные в книге страницы
-            if (chooseBook.getValue() != null &&
-                    chooseDate.getValue() != null &&
-                    !addReadPagesQtty.getText().equals("") &&
-                    isDigit(addReadPagesQtty.getText().trim()) &&
-                    Integer.parseInt(addReadPagesQtty.getText().trim()) > 0 &&
-                    Integer.parseInt(addReadPagesQtty.getText().trim()) <=
-                            ((Book) chooseBook.getValue()).getPages() - ((Book) chooseBook.getValue()).getPagesRead()) {
+                //проверяем что все поля заполнены и введенная сумма страниц не превышает непрочитанные в книге страницы
+                if (chooseBook.getValue() != null &&
+                        chooseDate.getValue() != null &&
+                        !addReadPagesQtty.getText().equals("") &&
+                        Library.this.isDigit(addReadPagesQtty.getText().trim()) &&
+                        Integer.parseInt(addReadPagesQtty.getText().trim()) > 0 &&
+                        Integer.parseInt(addReadPagesQtty.getText().trim()) <=
+                                ((Book) chooseBook.getValue()).getPages() - ((Book) chooseBook.getValue()).getPagesRead()) {
 
-                Book chosenBook = (Book) chooseBook.getValue();
-                int readPages = Integer.parseInt(addReadPagesQtty.getText());
-                String chosenMonth = chooseDate.getValue().getMonthValue() + "";
+                    Book chosenBook = (Book) chooseBook.getValue();
+                    int readPages = Integer.parseInt(addReadPagesQtty.getText());
+                    String chosenMonth = chooseDate.getValue().getMonthValue() + "";
 
-                if (chooseDate.getValue().getMonthValue() < 10) {
-                    chosenMonth = "0" + chosenMonth;
-                }
-                String chosenDay = chooseDate.getValue().getDayOfMonth() + "";
-                if (chooseDate.getValue().getDayOfMonth() < 10) {
-                    chosenDay = "0" + chosenDay;
-                }
-
-                String chosenDate = chosenMonth + "." + chosenDay;
-
-                for (XYChart.Data item : actualSeries.getData()) {
-                    if (item.getXValue().equals(chosenDate)) {
-                        item.setYValue((int) item.getYValue() + readPages);
+                    if (chooseDate.getValue().getMonthValue() < 10) {
+                        chosenMonth = "0" + chosenMonth;
                     }
-                }
-
-                //добавляем прочитанные страницы в указанную книгу
-                chosenBook.addPagesRead(Integer.parseInt(addReadPagesQtty.getText()));
-
-                //изменяем круговую диаграму
-                for (PieChart.Data piePiece : subjectChart.getData()) {
-                    if (piePiece.getName().equals(chosenBook.getSubject())) {
-                        piePiece.setPieValue(piePiece.getPieValue() + readPages);
-                        break;
+                    String chosenDay = chooseDate.getValue().getDayOfMonth() + "";
+                    if (chooseDate.getValue().getDayOfMonth() < 10) {
+                        chosenDay = "0" + chosenDay;
                     }
+
+                    String chosenDate = chosenMonth + "." + chosenDay;
+
+                    for (XYChart.Data item : actualSeries.getData()) {
+                        if (item.getXValue().equals(chosenDate)) {
+                            item.setYValue((int) item.getYValue() + readPages);
+                        }
+                    }
+
+                    //добавляем прочитанные страницы в указанную книгу
+                    chosenBook.addPagesRead(Integer.parseInt(addReadPagesQtty.getText()));
+
+                    //изменяем круговую диаграму
+                    for (PieChart.Data piePiece : subjectChart.getData()) {
+                        if (piePiece.getName().equals(chosenBook.getSubject())) {
+                            piePiece.setPieValue(piePiece.getPieValue() + readPages);
+                            break;
+                        }
+                    }
+
+                    //изменяем общее кол-во прочитанных страниц в профайле
+                    profile.setReadPages(profile.getReadPages() + readPages);
+
+                    //добавляем данные в лог прочитанных страниц профайла
+                    profile.progressLog.add(new XYChart.Data(chosenDate, readPages));
+
+                    //обновляем информацию на вкладке Details
+                    pagesReadTextShow.setText(profile.getReadPages() + "");
+                    actualTextShow.setText(profile.getTwoWeeksAverage() + "");
+                    percentageTextShow.setText((profile.getTwoWeeksAverage() * 100) / profile.getPlan() + "%");
+
+                    addReadPagesQtty.clear();
                 }
-
-                //изменяем общее кол-во прочитанных страниц в профайле
-                profile.setReadPages(profile.getReadPages() + readPages);
-
-                //добавляем данные в лог прочитанных страниц профайла
-                profile.progressLog.add(new XYChart.Data(chosenDate, readPages));
-
-                //обновляем информацию на вкладке Details
-                pagesReadTextShow.setText(profile.getReadPages() + "");
-                actualTextShow.setText(profile.getTwoWeeksAverage() + "");
-                percentageTextShow.setText((profile.getTwoWeeksAverage() * 100) / profile.getPlan() + "%");
-
-                addReadPagesQtty.clear();
             }
         });
 
         //кнопка выбора книги (вкладка Details)
-        detailsButton.setOnAction(event -> {
+        detailsButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
 
-            if (chooseBookForDetails.getValue() != null) {
-                Book book = (Book) chooseBookForDetails.getValue();
+                if (chooseBookForDetails.getValue() != null) {
+                    Book book = (Book) chooseBookForDetails.getValue();
 
-                detailsTextTitleShow.setText(book.getTitle());
-                detailsTextAuthorShow.setText(book.getAuthor());
-                detailsTextSubjectShow.setText(book.getSubject());
-                detailsTextPagesShow.setText(book.getPages() + "");
-                detailsTextReadShow.setText(book.getPagesRead() + "");
-                detailsTextPercentageShow.setText((book.getPagesRead() * 100) / book.getPages() + "%");
+                    detailsTextTitleShow.setText(book.getTitle());
+                    detailsTextAuthorShow.setText(book.getAuthor());
+                    detailsTextSubjectShow.setText(book.getSubject());
+                    detailsTextPagesShow.setText(book.getPages() + "");
+                    detailsTextReadShow.setText(book.getPagesRead() + "");
+                    detailsTextPercentageShow.setText((book.getPagesRead() * 100) / book.getPages() + "%");
 
-                ObservableList<PieChart.Data> detailsChartData = FXCollections.observableArrayList();
+                    ObservableList<PieChart.Data> detailsChartData = FXCollections.observableArrayList();
 
                     detailsChartData.addAll(
                             new PieChart.Data("Read", book.getPagesRead()),
@@ -450,149 +462,169 @@ public class Library extends Application {
                     );
 
 
-                detailsChart.setData(detailsChartData);
+                    detailsChart.setData(detailsChartData);
+                }
             }
         });
 
         //кнопка добавления фото (вкладка Details)
-        addPhotoButton.setOnAction(event -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PNG", "*.png"));
+        addPhotoButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PNG", "*.png"));
 
-            File file = fileChooser.showOpenDialog(primaryStage);
-            if (file != null) {
-                Image newImage = new Image("file:" + file.getAbsolutePath());
-                avatar.setImage(newImage);
-                profile.setPhoto(newImage);
+                File file = fileChooser.showOpenDialog(primaryStage);
+                if (file != null) {
+                    Image newImage = new Image("file:" + file.getAbsolutePath());
+                    avatar.setImage(newImage);
+                    profile.setPhoto(newImage);
 
-                File copyFile = new File(dirPhoto + File.separator + profile.getFirstName() + profile.getLastName() + "Photo" + ".png");
+                    File copyFile = new File(dirPhoto + File.separator + profile.getFirstName() + profile.getLastName() + "Photo" + ".png");
 
-                try (FileInputStream fis = new FileInputStream(file);
-                     FileOutputStream fos = new FileOutputStream(copyFile);
-                     BufferedOutputStream bos = new BufferedOutputStream(fos)) {
-                    copyFile.createNewFile();
-                    int i;
-                    while ((i = fis.read()) != -1) {
-                        bos.write(i);
+                    try (FileInputStream fis = new FileInputStream(file);
+                         FileOutputStream fos = new FileOutputStream(copyFile);
+                         BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+                        copyFile.createNewFile();
+                        int i;
+                        while ((i = fis.read()) != -1) {
+                            bos.write(i);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
 
-                profile.setPhotoFileName(copyFile.getName());
+                    profile.setPhotoFileName(copyFile.getName());
+                }
             }
         });
 
         //кнопка изменения плана
-        changePlanButton.setOnAction(event -> {
-            Stage planChangeStage = new Stage();
-            planChangeStage.setMinHeight(100);
-            planChangeStage.setMaxHeight(100);
-            planChangeStage.setMinWidth(300);
-            planChangeStage.setMaxWidth(300);
-            planChangeStage.setResizable(false);
-            planChangeStage.initOwner(primaryStage);
-            planChangeStage.initModality(Modality.WINDOW_MODAL);
-            planChangeStage.centerOnScreen();
-            planChangeStage.setTitle("Enter new plan value");
+        changePlanButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Stage planChangeStage = new Stage();
+                planChangeStage.setMinHeight(100);
+                planChangeStage.setMaxHeight(100);
+                planChangeStage.setMinWidth(300);
+                planChangeStage.setMaxWidth(300);
+                planChangeStage.setResizable(false);
+                planChangeStage.initOwner(primaryStage);
+                planChangeStage.initModality(Modality.WINDOW_MODAL);
+                planChangeStage.centerOnScreen();
+                planChangeStage.setTitle("Enter new plan value");
 
-            TextField enterNewPlanValue = new TextField();
-            enterNewPlanValue.setPromptText("Enter new plan here");
+                TextField enterNewPlanValue = new TextField();
+                enterNewPlanValue.setPromptText("Enter new plan here");
 
-            Button changePlanConfirmationButton = new Button("Change");
+                Button changePlanConfirmationButton = new Button("Change");
 
-            HBox changePlanGroup = new HBox(enterNewPlanValue, changePlanConfirmationButton);
-            changePlanGroup.setMinWidth(300);
-            changePlanGroup.setAlignment(Pos.CENTER);
-            changePlanGroup.setSpacing(10);
+                HBox changePlanGroup = new HBox(enterNewPlanValue, changePlanConfirmationButton);
+                changePlanGroup.setMinWidth(300);
+                changePlanGroup.setAlignment(Pos.CENTER);
+                changePlanGroup.setSpacing(10);
 
-            planChangeStage.setScene(new Scene(changePlanGroup));
+                planChangeStage.setScene(new Scene(changePlanGroup));
 
-            planChangeStage.show();
+                planChangeStage.show();
 
-            changePlanConfirmationButton.setOnAction(event1 -> {
-                profile.setPlan(Integer.parseInt(enterNewPlanValue.getText()));
-                planTextShow.setText(profile.getPlan() + "");
-                percentageTextShow.setText((profile.getTwoWeeksAverage() * 100) / profile.getPlan() + "%");
-                planSeries.setData(profile.generateLastTwoWeeksChartPlanData());
-                planChangeStage.close();
-            });
+                changePlanConfirmationButton.setOnAction(event1 -> {
+                    profile.setPlan(Integer.parseInt(enterNewPlanValue.getText()));
+                    planTextShow.setText(profile.getPlan() + "");
+                    percentageTextShow.setText((profile.getTwoWeeksAverage() * 100) / profile.getPlan() + "%");
+                    planSeries.setData(profile.generateLastTwoWeeksChartPlanData());
+                    planChangeStage.close();
+                });
+            }
         });
 
         //кнопка сохранения
-        saveButton.setOnAction(event -> {
-            try {
-                save();
-            } catch (IOException e) {
-                e.printStackTrace();
+        saveButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                try {
+                    Library.this.save();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                Stage saveConfirmationStage = new Stage();
+                saveConfirmationStage.initOwner(primaryStage);
+                saveConfirmationStage.initModality(Modality.WINDOW_MODAL);
+                saveConfirmationStage.initStyle(StageStyle.UTILITY);
+                saveConfirmationStage.centerOnScreen();
+                saveConfirmationStage.setMinHeight(100);
+                saveConfirmationStage.setMaxHeight(100);
+                saveConfirmationStage.setMinWidth(200);
+                saveConfirmationStage.setMaxWidth(200);
+                saveConfirmationStage.setTitle("Saved!");
+
+                Button saveOKButton = new Button("Ok");
+                saveOKButton.setMinWidth(100);
+
+                VBox saveConfirmationGroup = new VBox(saveOKButton);
+                saveConfirmationGroup.setSpacing(5);
+                saveConfirmationGroup.setAlignment(Pos.CENTER);
+
+                saveConfirmationStage.setScene(new Scene(saveConfirmationGroup));
+
+                saveOKButton.setOnAction(event1 -> saveConfirmationStage.close());
+
+                saveConfirmationStage.show();
             }
-
-            Stage saveConfirmationStage = new Stage();
-            saveConfirmationStage.initOwner(primaryStage);
-            saveConfirmationStage.initModality(Modality.WINDOW_MODAL);
-            saveConfirmationStage.initStyle(StageStyle.UTILITY);
-            saveConfirmationStage.centerOnScreen();
-            saveConfirmationStage.setMinHeight(100);
-            saveConfirmationStage.setMaxHeight(100);
-            saveConfirmationStage.setMinWidth(200);
-            saveConfirmationStage.setMaxWidth(200);
-            saveConfirmationStage.setTitle("Saved!");
-
-            Button saveOKButton = new Button("Ok");
-            saveOKButton.setMinWidth(100);
-
-            VBox saveConfirmationGroup = new VBox(saveOKButton);
-            saveConfirmationGroup.setSpacing(5);
-            saveConfirmationGroup.setAlignment(Pos.CENTER);
-
-            saveConfirmationStage.setScene(new Scene(saveConfirmationGroup));
-
-            saveOKButton.setOnAction(event1 -> saveConfirmationStage.close());
-
-            saveConfirmationStage.show();
         });
 
         //кнопка загрузки
-        loadButton.setOnAction(event -> {
+        loadButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
 
 
-            Profile loadedProfile = null;
+                Profile loadedProfile = null;
 
-            try {
-                loadedProfile = load(primaryStage);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+                try {
+                    loadedProfile = Library.this.load(primaryStage);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
-            if (loadedProfile != null) {
-                profile = loadedProfile;
+                if (loadedProfile != null) {
+                    profile = loadedProfile;
 
 
-                table.setItems(profile.books);
-                actualSeries.setData(profile.generateLastTwoWeeksChartActualData());
-                planSeries.setData(profile.generateLastTwoWeeksChartPlanData());
-                pieChartDate.clear();
-                pieChartDate.addAll(profile.generateSubjectReadData());
-                avatar.setImage(profile.getPhoto());
-                chooseBook.setItems(profile.books);
-                chooseBookForDetails.setItems(profile.books);
-                nameText.setText(profile.getFirstName() + " " + profile.getLastName());
-                bookQttyTextShow.setText(profile.books.size() + "");
-                pagesReadTextShow.setText(profile.getReadPages() + "");
-                planTextShow.setText(profile.getPlan() + "");
-                actualTextShow.setText(profile.getTwoWeeksAverage() + "");
-                percentageTextShow.setText((profile.getTwoWeeksAverage() * 100) / profile.getPlan() + "%");
+                    table.setItems(profile.books);
+                    actualSeries.setData(profile.generateLastTwoWeeksChartActualData());
+                    planSeries.setData(profile.generateLastTwoWeeksChartPlanData());
+                    pieChartDate.clear();
+                    pieChartDate.addAll(profile.generateSubjectReadData());
+                    if (profile.getPhotoFileName().equals("")) {
+                        avatar.setImage(new Image("no photo.png"));
+                    } else {
+                        avatar.setImage(profile.getPhoto());
+                    }
+                    chooseBook.setItems(profile.books);
+                    chooseBookForDetails.setItems(profile.books);
+                    nameText.setText(profile.getFirstName() + " " + profile.getLastName());
+                    bookQttyTextShow.setText(profile.books.size() + "");
+                    pagesReadTextShow.setText(profile.getReadPages() + "");
+                    planTextShow.setText(profile.getPlan() + "");
+                    actualTextShow.setText(profile.getTwoWeeksAverage() + "");
+                    percentageTextShow.setText((profile.getTwoWeeksAverage() * 100) / profile.getPlan() + "%");
+                }
             }
         });
 
         //кнопка выхода
-        exitButton.setOnAction(event -> {
-            try {
-                save();
-            } catch (IOException e) {
-                e.printStackTrace();
+        exitButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                try {
+                    Library.this.save();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                primaryStage.close();
             }
-            primaryStage.close();
         });
 
 
@@ -656,53 +688,66 @@ public class Library extends Application {
         HBox startGroup = new HBox(startLeftGroup, startSeparator, startRightGroup);
 
         //кнопка создания профиля - стартовое окно
-        createProfileButton.setOnAction(event -> {
-            if (!firstNameProfile.getText().equals("") && !lastNameProfile.getText().equals("")) {
-                profile.setFirstName(firstNameProfile.getText());
-                profile.setLastName(lastNameProfile.getText());
-                nameText.setText(firstNameProfile.getText() + " " + lastNameProfile.getText());
-                startStage.close();
-            } else {
-                alarm.setVisible(true);
+        createProfileButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if (!firstNameProfile.getText().equals("") && !lastNameProfile.getText().equals("")) {
+                    profile.setFirstName(firstNameProfile.getText());
+                    profile.setLastName(lastNameProfile.getText());
+                    nameText.setText(firstNameProfile.getText() + " " + lastNameProfile.getText());
+                    startStage.close();
+                } else {
+                    alarm.setVisible(true);
+                }
             }
         });
 
         //кнопка выхода - стартовое окно
-        closeStartButton.setOnAction(event -> {
-            startStage.close();
-            primaryStage.close();
+        closeStartButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                startStage.close();
+                primaryStage.close();
+            }
         });
 
         //кнопка загрузки - стартовое окно
-        loadProfileStartButton.setOnAction(event -> {
+        loadProfileStartButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
 
-            Profile loadedProfile = null;
+                Profile loadedProfile = null;
 
-            try {
-                loadedProfile = load(primaryStage);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+                try {
+                    loadedProfile = Library.this.load(primaryStage);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
-            if (loadedProfile != null) {
-                profile = loadedProfile;
+                if (loadedProfile != null) {
+                    profile = loadedProfile;
 
 
-                table.setItems(profile.books);
-                actualSeries.setData(profile.generateLastTwoWeeksChartActualData());
-                planSeries.setData(profile.generateLastTwoWeeksChartPlanData());
-                pieChartDate.addAll(profile.generateSubjectReadData());
-                avatar.setImage(profile.getPhoto());
-                chooseBook.setItems(profile.books);
-                chooseBookForDetails.setItems(profile.books);
-                nameText.setText(profile.getFirstName() + " " + profile.getLastName());
-                bookQttyTextShow.setText(profile.books.size() + "");
-                pagesReadTextShow.setText(profile.getReadPages() + "");
-                planTextShow.setText(profile.getPlan() + "");
-                actualTextShow.setText(profile.getTwoWeeksAverage() + "");
-                percentageTextShow.setText((profile.getTwoWeeksAverage() * 100) / profile.getPlan() + "%");
+                    table.setItems(profile.books);
+                    actualSeries.setData(profile.generateLastTwoWeeksChartActualData());
+                    planSeries.setData(profile.generateLastTwoWeeksChartPlanData());
+                    pieChartDate.addAll(profile.generateSubjectReadData());
+                    if (profile.getPhotoFileName().equals("")) {
+                        avatar.setImage(new Image("no photo.png"));
+                    } else {
+                        avatar.setImage(profile.getPhoto());
+                    }
+                    chooseBook.setItems(profile.books);
+                    chooseBookForDetails.setItems(profile.books);
+                    nameText.setText(profile.getFirstName() + " " + profile.getLastName());
+                    bookQttyTextShow.setText(profile.books.size() + "");
+                    pagesReadTextShow.setText(profile.getReadPages() + "");
+                    planTextShow.setText(profile.getPlan() + "");
+                    actualTextShow.setText(profile.getTwoWeeksAverage() + "");
+                    percentageTextShow.setText((profile.getTwoWeeksAverage() * 100) / profile.getPlan() + "%");
 
-                startStage.close();
+                    startStage.close();
+                }
             }
         });
 
